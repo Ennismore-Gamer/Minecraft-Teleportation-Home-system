@@ -1,0 +1,12 @@
+Usage:
+
+Set Home:
+Type /sethome to set your current location as your home.
+
+Teleport to Home:
+Type /home to teleport back to your saved home.
+
+Teleport to Specific Coordinates:
+Type /teleport x y z to teleport to any specific coordinates.
+
+NOTE -- This has NOT been tested. I recommend making a backup of Minecraft incase anything goes wrong.
