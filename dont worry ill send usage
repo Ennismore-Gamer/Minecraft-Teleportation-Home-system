@@ -1,0 +1,101 @@
+### **Step 1: Create a Folder for the Behavior Pack**
+
+1. **Create a new folder** for your Behavior Pack:
+   - Name the folder `TeleportationSystem/`.
+
+2. **Inside the `TeleportationSystem/` folder**, create the following structure:
+   - `manifest.json` (Metadata for your pack)
+   - `scripts/` (Folder for the JavaScript code)
+   
+3. **Inside the `scripts/` folder**, create a JavaScript file called `teleportation.js`.
+
+---
+
+### **Step 2: Create `manifest.json`**
+
+```json
+{
+  "format_version": "2",
+  "header": {
+    "description": "Teleportation/Home System",
+    "name": "Teleportation and Home System",
+    "uuid": "f50c93c7-5d0f-4e0d-8b3b-01a0b5f32e55",
+    "version": [1, 0, 0]
+  },
+  "modules": [
+    {
+      "description": "Teleportation Script",
+      "version": [1, 0, 0],
+      "uuid": "bbc0b95b-bf44-4b67-a62a-efdb1785b452",
+      "type": "scripting"
+    }
+  ]
+}
+let system = server.registerSystem(0, 0);
+
+system.initialize = function() {
+    this.listenForEvent("minecraft:script_logger_config", (eventData) => this.onScriptLoggerConfig(eventData));
+    this.playerHomes = {}; // To store home locations of players
+};
+
+// This function runs when the script is loaded
+system.onScriptLoggerConfig = function(eventData) {
+    this.broadcastMessage("Teleportation/Home System is now active!");
+};
+
+// Handle the "/sethome" command to set a player's home
+system.setHome = function(player) {
+    let playerName = player.name;
+    let position = player.location;
+
+    // Store player's home coordinates in the playerHomes object
+    this.playerHomes[playerName] = position;
+    this.broadcastMessage(playerName + "'s home has been set to: " + JSON.stringify(position));
+};
+
+// Handle the "/home" command to teleport a player to their home
+system.teleportHome = function(player) {
+    let playerName = player.name;
+    let home = this.playerHomes[playerName];
+
+    if (home) {
+        // Teleport the player to their saved home coordinates
+        player.teleportTo(home);
+        this.broadcastMessage(playerName + " has been teleported to their home!");
+    } else {
+        this.broadcastMessage(playerName + " has not set a home yet!");
+    }
+};
+
+// Handle the "/teleport" command to teleport to specific coordinates
+system.teleportToCoordinates = function(player, x, y, z) {
+    let position = {x: x, y: y, z: z};
+    player.teleportTo(position);
+    this.broadcastMessage(player.name + " has been teleported to coordinates: " + JSON.stringify(position));
+};
+
+// Listen for commands
+system.listenForEvent("minecraft:script_logger_config", (eventData) => this.onCommandReceived(eventData));
+
+// Example of handling the custom teleport commands
+system.onCommandReceived = function(eventData) {
+    let player = eventData.data.player;
+    let command = eventData.data.command;
+
+    if (command === "/sethome") {
+        this.setHome(player);
+    } else if (command === "/home") {
+        this.teleportHome(player);
+    } else if (command.startsWith("/teleport")) {
+        let coords = command.split(" ");
+        let x = parseFloat(coords[1]);
+        let y = parseFloat(coords[2]);
+        let z = parseFloat(coords[3]);
+        this.teleportToCoordinates(player, x, y, z);
+    }
+};
+
+// Helper function to send a broadcast message to all players
+system.broadcastMessage = function(message) {
+    this.broadcastEvent("minecraft:display_chat_event", message);
+};
